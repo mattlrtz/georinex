@@ -157,6 +157,13 @@ def rinexnav3(
         if "IRNA" in corr and "IRNB" in corr:
             nav.attrs["ionospheric_corr_IRN"] = np.hstack((corr["IRNA"], corr["IRNB"]))
 
+
+    # Add GPS to Galileo conversion parameters if exist.
+    if "TIME SYSTEM CORR" in header:
+        corr = header["TIME SYSTEM CORR"]
+        if "GAGP" in corr:
+            nav.attrs["GAGP"] = corr["GAGP"]
+
     nav.attrs["version"] = header["version"]
     nav.attrs["svtype"] = svtypes
     nav.attrs["rinextype"] = "nav"
@@ -485,6 +492,16 @@ def navheader3(f: T.TextIO) -> dict[str, T.Any]:
                 rinex_string_to_float(content[5 + i * 12 : 5 + (i + 1) * 12]) for i in range(N)
             ]
             hdr[kind][coeff_kind] = coeff
+
+        elif kind == "TIME SYSTEM CORR":
+            if kind not in hdr:
+                hdr[kind] = {}
+            coeff_kind = content[:4].strip()
+            coeff = [float(content[4:22]), float(content[22:38]),int(content[38:46]) ,int(content[46:51]) ]
+            #print(coeff)
+            hdr[kind][coeff_kind] = coeff
+
+
         else:
             hdr[kind] = content
 
